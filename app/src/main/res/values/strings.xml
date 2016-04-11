@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">春天音乐</string>
+    <string name="action_settings">Settings</string>
+    <string name="SINGLE_PLAY">单曲循环</string>
+    <string name="RANDOM_PLAY">随机播放</string>
+    <string name="ORDER_PLAY">顺序播放</string>
+
+</resources>
