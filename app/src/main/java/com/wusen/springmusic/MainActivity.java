@@ -31,6 +31,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.View;
@@ -94,6 +95,18 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         changeColor(currentColor);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        bindPlayService();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unBindPlayService();
+    }
+
     public void initList() {
         int i = pager.getCurrentItem();
         if (i == 0) {
@@ -115,12 +128,15 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     }
 
     public void changeUiStatus(int position) {
-        initList();
+        //initList();
+        musicResources = musicPlayerService.getMusicResourceList();
         this.position = position;
         LocalMusicResource musicResource;
         try {
+            Log.i("main","success");
             musicResource = musicResources.get(position);
         } catch (Exception e) {
+            Log.i("main","error");
             musicResources = MediaUtils.musicResourceList(this);
             musicResource = musicResources.get(position);
         }

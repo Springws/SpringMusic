@@ -6,9 +6,11 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.lidroid.xutils.db.sqlite.Selector;
+import com.lidroid.xutils.db.sqlite.WhereBuilder;
 import com.wusen.music_resource.LocalMusicResource;
 import com.wusen.utils.MediaUtils;
 
@@ -154,6 +156,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             currentPosition = 0;
             play(currentPosition);
         } else {
+            Log.i("service","play");
             LocalMusicResource musicResource = musicResourceList.get(position);
             String name = musicResource.getMusicName();
             try {
@@ -161,12 +164,18 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                 long time = System.currentTimeMillis();
                 musicResource.setPlay_time(time);
                 musicResource.setRecent_id(musicResource.getId());
+                Log.i("service","try");
                 if(recentResource!=null)
                 {
-                    app.dbRecentUtils.update(recentResource,recentResource.PLAY_TIME);
+                    Log.i("service","不为空");
+
+                    app.dbRecentUtils.delete(LocalMusicResource.class, WhereBuilder.b(LocalMusicResource.MUSIC_NAME,"=",name));
+                    Log.i("service",name);
+                    app.dbRecentUtils.save(musicResource);
                 }
                 if(recentResource == null)
                 {
+                    Log.i("service","为空");
                     app.dbRecentUtils.save(musicResource);
                 }
                 mediaPlayer.reset();
@@ -180,6 +189,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         }
                currentPosition = position;
         if (musicUpdateListener != null) {
+            Log.i("service","onchange");
             musicUpdateListener.onChange(currentPosition);
 
         }

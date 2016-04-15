@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.lidroid.xutils.db.sqlite.Selector;
@@ -41,13 +42,13 @@ public class RecentFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        mainActivity.bindPlayService();
+        //mainActivity.bindPlayService();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        mainActivity.unBindPlayService();
+      //  mainActivity.unBindPlayService();
     }
 
     @Nullable
@@ -55,16 +56,30 @@ public class RecentFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_recent_fragment, null);
         recentMusicResources = loadDate();
-        MusicAdapter adapter = new MusicAdapter(getActivity(), recentMusicResources);
+        adapter = new MusicAdapter(getActivity(), recentMusicResources);
+
         listView = (ListView) view.findViewById(R.id.recent_lv);
         listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                try {
+                    recentMusicResources = app.dbRecentUtils.findAll(Selector.from(LocalMusicResource.class));
+                } catch (DbException e) {
+                    e.printStackTrace();
+                }
+                mainActivity.musicPlayerService.setMusicResourceList(recentMusicResources);
+                mainActivity.musicPlayerService.play(recentMusicResources.size()-i-1);
+            }
+        });
         return view;
     }
 
     public List<LocalMusicResource> loadDate() {
         try {
             app = (MusicApplication) getActivity().getApplication();
-            //recentMusicResources = app.dbRecentUtils.findAll(LocalMusicResource.class);
+
+            //按时间排序得到recentMusicResources
             recentMusicResources = app.dbRecentUtils.findAll(Selector.from(LocalMusicResource.class).orderBy(LocalMusicResource.PLAY_TIME,true));
         } catch (DbException e) {
             e.printStackTrace();

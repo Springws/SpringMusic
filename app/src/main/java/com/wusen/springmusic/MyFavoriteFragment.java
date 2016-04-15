@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * Created by 15059 on 2016/3/21.
  */
-public class MyFavoriteFragment extends Fragment implements AdapterView.OnItemClickListener{
+public class MyFavoriteFragment extends Fragment {
     private MusicApplication app;
     private MainActivity mainActivity;
     private List<LocalMusicResource> likeMusicResources = null;
@@ -40,17 +40,16 @@ public class MyFavoriteFragment extends Fragment implements AdapterView.OnItemCl
     @Override
     public void onResume() {
         super.onResume();
-        mainActivity.bindPlayService();
-        likeMusicResources = MediaUtils.likeMusicResourceList(getActivity(),app.dbLikeUtils);
-        adapter = new MusicAdapter(mainActivity,likeMusicResources);
-        adapter.notifyDataSetChanged();
-        listView.setAdapter(adapter);
+        //mainActivity.bindPlayService();
+        //likeMusicResources = MediaUtils.likeMusicResourceList(getActivity(),app.dbLikeUtils);
+        loadDate();
+       // listView.setAdapter(adapter);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        mainActivity.unBindPlayService();
+      //  mainActivity.unBindPlayService();
         adapter = null;
     }
 
@@ -58,30 +57,28 @@ public class MyFavoriteFragment extends Fragment implements AdapterView.OnItemCl
     public View onCreateView(LayoutInflater inflater,  ViewGroup container,  Bundle savedInstanceState) {
             View view = inflater.inflate(R.layout.fragment_my_favorite,null);
             listView = (ListView) view.findViewById(R.id.favorite_lv);
-            likeMusicResources = loadDate();
-            adapter = new MusicAdapter(getActivity(),likeMusicResources);
+            //loadDate();
+           // adapter = new MusicAdapter(getActivity(),likeMusicResources);
 
-            listView.setAdapter(adapter);
-            listView.setOnItemClickListener(this);
+            //listView.setAdapter(adapter);
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                    mainActivity.musicPlayerService.setMusicResourceList(likeMusicResources);
+                    mainActivity.musicPlayerService.play(i);
+                }
+            });
 
             return view;
     }
 
-    public List<LocalMusicResource> loadDate()
+    public void loadDate()
     {
-
         app = (MusicApplication) getActivity().getApplication();
         likeMusicResources = MediaUtils.likeMusicResourceList(getActivity(),app.dbLikeUtils);
-        return likeMusicResources;
+        adapter = new MusicAdapter(mainActivity,likeMusicResources);
+        adapter.notifyDataSetChanged();
+        listView.setAdapter(adapter);
     }
-
-    @Override
-    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-        mainActivity.musicPlayerService.setMusicResourceList(likeMusicResources);
-        mainActivity.musicPlayerService.play(i);
-
-    }
-
-
 
 }

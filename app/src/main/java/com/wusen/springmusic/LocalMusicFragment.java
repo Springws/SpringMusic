@@ -60,14 +60,16 @@ public class LocalMusicFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        mainActivity.bindPlayService();
+       // mainActivity.bindPlayService();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        mainActivity.unBindPlayService();
+        //mainActivity.unBindPlayService();
     }
+
+
 
 
     public void loadDate() {

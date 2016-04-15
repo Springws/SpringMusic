@@ -77,20 +77,33 @@ public class MusicDetailActivity extends BaseActivity implements OnClickListener
         setContentView(R.layout.music_detail_layout);
 
         initView();
-        pagerPosition = getIntent().getIntExtra("pager position",0);
-        if(pagerPosition==0) {
-            resourceList = MediaUtils.musicResourceList(this);
-        }else if(pagerPosition==1)
-        {
-            app = (MusicApplication) getApplication();
-            resourceList = MediaUtils.likeMusicResourceList(this,app.dbLikeUtils);
-        }
+//        pagerPosition = getIntent().getIntExtra("pager position",0);
+//        if(pagerPosition==0) {
+//            resourceList = MediaUtils.musicResourceList(this);
+//        }else if(pagerPosition==1)
+//        {
+//            app = (MusicApplication) getApplication();
+//            resourceList = MediaUtils.likeMusicResourceList(this,app.dbLikeUtils);
+//        }else if(pagerPosition==2)
+//        {
+//            try {
+//                resourceList =  app.dbRecentUtils.findAll(LocalMusicResource.class);
+//            } catch (DbException e) {
+//                e.printStackTrace();
+//            }
+//        }
         myAdapter = new MyAdapter();
         initPager();
         register();
+        //bindPlayService();
+
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         bindPlayService();
-
-
     }
 
     @Override
@@ -99,19 +112,7 @@ public class MusicDetailActivity extends BaseActivity implements OnClickListener
         unBindPlayService();
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        unBindPlayService();
 
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unBindPlayService();
-
-    }
 
     //更新进度条
     @Override
@@ -127,8 +128,11 @@ public class MusicDetailActivity extends BaseActivity implements OnClickListener
     public void change(int position) {
         LocalMusicResource musicResource;
         try {
-            musicResource = resourceList.get(position);
+            resourceList = musicPlayerService.getMusicResourceList();
+            musicResource =  resourceList.get(position);
+            //musicResource = resourceList.get(position);
         } catch (Exception e) {
+            Log.i("service","error");
             resourceList = MediaUtils.musicResourceList(this);
             musicResource = resourceList.get(position);
         }
@@ -165,11 +169,11 @@ public class MusicDetailActivity extends BaseActivity implements OnClickListener
             default:
                 break;
         }
-        LocalMusicResource music = resourceList.get(musicPlayerService.getPosition());
+        //musicResource = resourceList.get(musicPlayerService.getPosition());
         LocalMusicResource likeMusic = null;
         try {
             likeMusic = app.dbLikeUtils.findFirst(
-                    Selector.from(LocalMusicResource.class).where(" music_id", "=", music.getMusic_id()));
+                    Selector.from(LocalMusicResource.class).where(" music_id", "=", musicResource.getMusic_id()));
         } catch (DbException e) {
             e.printStackTrace();
         }
@@ -179,6 +183,7 @@ public class MusicDetailActivity extends BaseActivity implements OnClickListener
         }else {
             ivOfLike.setImageResource(R.drawable.like);
         }
+
 
 //        String songName = musicResource.getMusicName();
 //        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/"+songName+".lrc";
@@ -321,7 +326,7 @@ public class MusicDetailActivity extends BaseActivity implements OnClickListener
                 musicPlayerService.previous();
                 break;
 
-            case R.id.iv_menu:
+            case R.id.iv_menu: {
                 int mode = (int) menuOfIv.getTag();
                 switch (mode) {
                     case MusicPlayerService.ORDER_PLAY:
@@ -342,23 +347,32 @@ public class MusicDetailActivity extends BaseActivity implements OnClickListener
                         musicPlayerService.setPlayMode(musicPlayerService.ORDER_PLAY);
                         Toast.makeText(MusicDetailActivity.this, R.string.ORDER_PLAY, Toast.LENGTH_SHORT).show();
                         break;
+                    default:
+                        break;
                 }
+                break;
+            }
 
             case R.id.iv_like:
+                resourceList = musicPlayerService.getMusicResourceList();
                 LocalMusicResource music = resourceList.get(musicPlayerService.getPosition());
+                Log.i("like","like");
                 try {
                     LocalMusicResource likeMusic = app.dbLikeUtils.findFirst(Selector.from(LocalMusicResource.class).where(" music_id", "=", music.getMusic_id()));
                     if (likeMusic != null) {
-                        app.dbLikeUtils.deleteById(LocalMusicResource.class, likeMusic.getMusic_id());
+                        Log.i("like",",不为空删除");
+                        app.dbLikeUtils.deleteById(LocalMusicResource.class, likeMusic.getId());
                         ivOfLike.setImageResource(R.drawable.like);
                         Toast.makeText(MusicDetailActivity.this,"已取消收藏",Toast.LENGTH_SHORT).show();
                     } else {
+                        Log.i("like", "为空，存入");
                         music.setMusic_id(music.getId());
                         app.dbLikeUtils.save(music);
                         ivOfLike.setImageResource(R.drawable.like1);
                         Toast.makeText(MusicDetailActivity.this,"已收藏",Toast.LENGTH_SHORT).show();
                     }
                 } catch (DbException e) {
+                    Log.i("like","error");
                     e.printStackTrace();
                 }
                 break;
@@ -380,4 +394,12 @@ public class MusicDetailActivity extends BaseActivity implements OnClickListener
 
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {}
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
+    }
 }
+
+
